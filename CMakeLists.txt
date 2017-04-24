@@ -87,6 +87,8 @@ if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
   add_definitions(-DIS_64BIT)
 endif()
 
+add_definitions(-D_USE_MATH_DEFINES)
+
 If(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(IS_OSX ON)
   add_definitions(-DIS_OSX)
@@ -121,7 +123,7 @@ else()
 endif()
 
 # REQUIRED packages
-find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui contrib)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui calib3d)
 find_package(Eigen  REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -129,6 +131,14 @@ include_directories(${OpenCV_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
 
 list(APPEND MY_LIBRARIES ${OpenCV_LIBS})
 list(APPEND MY_LIBRARIES_CORE ${OpenCV_LIBS})
+IF(WIN32)
+IF(CMAKE_CL_64)
+	SET(DBGHELP "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um/x64/DbgHelp.Lib")
+ELSE()
+	SET(DBGHELP "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um/x86/DbgHelp.Lib")
+ENDIF(CMAKE_CL_64)
+LIST(APPEND MY_LIBRARIES_CORE ${DBGHELP})
+ENDIF(WIN32)
 
 set(Boost_USE_STATIC_LIBS     ON)
 set(Boost_USE_STATIC_RUNTIME  ON)

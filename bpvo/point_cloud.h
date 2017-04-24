@@ -55,7 +55,8 @@ class PointWithInfo
   friend std::ostream& operator<<(std::ostream&, const PointWithInfo&);
 
  private:
-  char _pad[32 - (sizeof(_xyzw) + sizeof(_rgba) + sizeof(_w))];
+	 //char _pad[32 - (sizeof(_xyzw) + sizeof(_rgba) + sizeof(_w))];
+	 char _pad[32 - (sizeof(Point) + sizeof(Color) + sizeof(float))];
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -67,6 +68,7 @@ typedef typename EigenAlignedContainer<PointWithInfo>::type PointWithInfoVector;
 class PointCloud
 {
  public:
+	 EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef Matrix44 Transform;
   typedef typename PointWithInfoVector::iterator iterator;
   typedef typename PointWithInfoVector::const_iterator const_iterator;

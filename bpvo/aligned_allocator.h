@@ -41,6 +41,11 @@ class AlignedAllocator : public std::allocator<T>
   AlignedAllocator(const AlignedAllocator& o) : std::allocator<T>(o) {}
   ~AlignedAllocator() {}
 
+  template<typename U, std::size_t A>
+  AlignedAllocator(const AlignedAllocator<U, A>&)
+  {	// construct from a related allocator (do nothing)
+  }
+
   template <typename U, std::size_t A>
   bool operator==(const AlignedAllocator<U,A>&) const { return true; }
 
@@ -51,13 +56,26 @@ class AlignedAllocator : public std::allocator<T>
   {
     // TODO some systems might not have posix_memalign
     void* ret = nullptr;
-    if(posix_memalign(&ret, Alignment, n*sizeof(T)))
-      throw std::bad_alloc();
+#if defined(_MSC_VER)
+	ret = _aligned_malloc(n * sizeof(T), Alignment);
+	if (!ret)
+		throw std::bad_alloc();
+#elif defined(__GNUC__)
+	if (posix_memalign(&ret, Alignment, n * sizeof(T)))
+		throw std::bad_alloc();
+#endif
 
     return static_cast<pointer>(ret);
   }
 
-  inline void deallocate(pointer ptr, size_type){ std::free(ptr); }
+  inline void deallocate(pointer ptr, size_type){
+	   
+#if defined(_MSC_VER)
+	  _aligned_free(ptr);
+#elif defined(__GNUC__)
+	  std::free(ptr);
+#endif
+  }
 
 }; // AlignedAllocator
 

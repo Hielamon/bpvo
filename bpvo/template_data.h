@@ -39,6 +39,7 @@ class DenseDescriptor;
 class TemplateData
 {
  public:
+	 EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef RigidBodyWarp WarpType;
   typedef WarpType Warp;
   typedef typename WarpType::Point Point;

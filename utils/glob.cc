@@ -1,6 +1,11 @@
 #include "bpvo/debug.h"
 #include "utils/glob.h"
+#if defined(WIN32) || defined(_WIN32)
+#include "utils/winGlob.h"
+#else
 #include <glob.h>
+#endif
+//
 
 namespace bpvo {
 
@@ -8,6 +13,14 @@ std::vector<std::string> glob(const std::string& pattern, bool verbose)
 {
   std::vector<std::string> ret;
 
+#if defined(WIN32) || defined(_WIN32)
+  winGlob(pattern, ret);
+  if (ret.size() == 0 && verbose)
+  {
+	  Warn("glob() : no match for: '%s'\n", pattern.c_str());
+  }
+
+#else
   ::glob_t globbuf;
   int err = ::glob(pattern.c_str(), GLOB_TILDE, NULL, &globbuf);
   switch(err)
@@ -38,6 +51,7 @@ std::vector<std::string> glob(const std::string& pattern, bool verbose)
   }
 
   globfree(&globbuf);
+#endif
   return ret;
 }
 

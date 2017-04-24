@@ -31,6 +31,9 @@ namespace bpvo {
 class VisualOdometry::Impl
 {
  public:
+	 EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+
   inline Impl(const Matrix33&, float, ImageSize, const AlgorithmParameters& p);
 
   inline Result addFrame(const uint8_t*, const float*);
@@ -39,6 +42,7 @@ class VisualOdometry::Impl
 
   inline int numPointsAtLevel(int) const;
   inline const PointVector& pointsAtLevel(int) const;
+
 
  private:
 

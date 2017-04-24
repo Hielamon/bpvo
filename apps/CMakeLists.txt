@@ -1,4 +1,4 @@
-add_library(bpvo_apps ${LIBRARY_TYPE} vo_app.cc)
+add_library(bpvo_apps ${LIBRARY_TYPE} vo_app.cc vo_app.h)
 
 if(TRUE OR IS_OSX)
   target_link_libraries(bpvo_apps ${MY_LIBRARIES_CORE} bpvo_utils bpvo)
@@ -11,5 +11,6 @@ foreach(f ${src})
   get_filename_component(bname ${f} NAME_WE)
   add_executable(${bname} ${f})
   target_link_libraries(${bname} bpvo_apps bpvo_utils bpvo ${MY_LIBRARIES})
+# add_definitions(-DBOOST_ALL_DYN_LINK)
 endforeach()
 

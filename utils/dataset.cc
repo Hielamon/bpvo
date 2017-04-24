@@ -75,8 +75,8 @@ bool DisparityDataset::init(const ConfigFile& cf)
     //
     if(!left_fmt.empty())
     {
-      _image_filenames = make_unique<FileLoader>(root_dir, left_fmt, frame_start);
-      _disparity_filenames = make_unique<FileLoader>(root_dir, dmap_fmt, frame_start);
+      _image_filenames = bpvo::make_unique<FileLoader>(root_dir, left_fmt, frame_start);
+      _disparity_filenames = bpvo::make_unique<FileLoader>(root_dir, dmap_fmt, frame_start);
 
       auto frame = this->getFrame(0);
       THROW_ERROR_IF( frame == nullptr, "failed to read frame" );
@@ -152,8 +152,8 @@ bool StereoDataset::init(const ConfigFile& cf)
 
     if(!left_fmt.empty())
     {
-      _left_filenames = make_unique<FileLoader>(root_dir, left_fmt, frame_start);
-      _right_filenames = make_unique<FileLoader>(root_dir, right_fmt, frame_start);
+      _left_filenames = bpvo::make_unique<FileLoader>(root_dir, left_fmt, frame_start);
+      _right_filenames = bpvo::make_unique<FileLoader>(root_dir, right_fmt, frame_start);
 
       auto frame = this->getFrame(0);
       THROW_ERROR_IF( nullptr == frame, "failed to load frame" );

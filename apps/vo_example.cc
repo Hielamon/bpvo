@@ -29,7 +29,7 @@
 //
 
 static const char* LEFT_IMAGE_PREFIX =
-"/home/halismai/data/NewTsukubaStereoDataset/illumination/fluorescent/left/tsukuba_fluorescent_L_%05d.png";
+"D:/Academic-Research/Datas/SLAMDatas/NewTsukubaStereoDataset/illumination/fluorescent/left/tsukuba_fluorescent_L_%05d.png";
 
 /*
 static const char* RIGHT_IMAGE_PREFIX =
@@ -37,7 +37,7 @@ static const char* RIGHT_IMAGE_PREFIX =
 */
 
 static const char* DMAP_PREFIX =
-"/home/halismai/data/NewTsukubaStereoDataset/groundtruth/disparity_maps/left/tsukuba_disparity_L_%05d.png";
+"D:/Academic-Research/Datas/SLAMDatas/NewTsukubaStereoDataset/groundtruth/disparity_maps/left/tsukuba_disparity_L_%05d.png";
 
 using namespace bpvo;
 
@@ -86,6 +86,6 @@ int main()
     fprintf(stdout, "Frame %03d [%03d ms] %0.2f Hz\r", i, (int) tt, i / total_time);
     fflush(stdout);
   }
-
+  fprintf(stdout, "End Test");
   return 0;
 }

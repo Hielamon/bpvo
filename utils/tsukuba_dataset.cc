@@ -47,8 +47,8 @@ bool TsukubaSyntheticDataset::init(const ConfigFile& cf)
                           illumination.c_str(), illumination.c_str(), "%05d");
     auto dmap_fmt = Format("groundtruth/disparity_maps/left/tsukuba_disparity_L_%s.png", "%05d");
 
-    this->_image_filenames = make_unique<FileLoader>(root_dir, img_fmt, frame_start);
-    this->_disparity_filenames = make_unique<FileLoader>(root_dir, dmap_fmt, frame_start);
+    this->_image_filenames = bpvo::make_unique<FileLoader>(root_dir, img_fmt, frame_start);
+    this->_disparity_filenames = bpvo::make_unique<FileLoader>(root_dir, dmap_fmt, frame_start);
 
     auto frame = this->getFrame(0);
     THROW_ERROR_IF( nullptr == frame, "failed to load the first frame" );
@@ -85,8 +85,8 @@ bool TsukubaStereoDataset::init(const ConfigFile& cf)
     auto right_fmt = Format("illumination/%s/right/tsukuba_%s_R_%s.png",
                            illumination.c_str(), illumination.c_str(), "%05d");
 
-    this->_left_filenames = make_unique<FileLoader>(root_dir,  left_fmt, frame_start);
-    this->_right_filenames = make_unique<FileLoader>(root_dir, right_fmt, frame_start);
+    this->_left_filenames = bpvo::make_unique<FileLoader>(root_dir,  left_fmt, frame_start);
+    this->_right_filenames = bpvo::make_unique<FileLoader>(root_dir, right_fmt, frame_start);
 
     auto frame = this->getFrame(0);
     THROW_ERROR_IF( nullptr == frame, "Failed to load the first frame" );

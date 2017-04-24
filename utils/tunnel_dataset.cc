@@ -8,9 +8,15 @@ namespace {
 
 static inline void removeWhiteSpace(std::string& s)
 {
+#if defined(WIN32) || defined(_WIN32)
+	s.erase(std::remove_if(s.begin(), s.end(),
+						   [](char c) { return std::isspace(c); }),
+			s.end());
+#else
   s.erase(std::remove_if(s.begin(), s.end(),
                  [](char c) { return std::isspace<char>(c, std::locale::classic()); }),
           s.end());
+#endif
 }
 
 } // namespace

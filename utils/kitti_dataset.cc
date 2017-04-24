@@ -50,8 +50,8 @@ bool KittiDataset::init(const ConfigFile& cf)
     auto right_fmt = Format("sequences/%02d/image_1/%s.png", sequence, "%06d");
     auto frame_start = cf.get<int>("FirstFrameNumber", 0);
 
-    this->_left_filenames = make_unique<FileLoader>(root_dir, left_fmt, frame_start);
-    this->_right_filenames = make_unique<FileLoader>(root_dir, right_fmt, frame_start);
+    this->_left_filenames = bpvo::make_unique<FileLoader>(root_dir, left_fmt, frame_start);
+    this->_right_filenames = bpvo::make_unique<FileLoader>(root_dir, right_fmt, frame_start);
 
     auto frame = this->getFrame(0);
     THROW_ERROR_IF( nullptr == frame, "failed to load frame" );

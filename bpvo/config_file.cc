@@ -20,6 +20,7 @@
  */
 
 #include "bpvo/config_file.h"
+#include <cctype>
 
 #include <algorithm>
 #include <sstream>
@@ -40,7 +41,7 @@ ConfigFile::ConfigFile(std::ifstream& ifs)
 
 ConfigFile::ConfigFile(std::string filename)
 {
-  std::ifstream ifs(filename);
+  std::ifstream ifs(filename, std::ios::in);
   if(!ifs.is_open())
     throw Error("could not open file '" + filename + "'");
 

@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 {
   ProgramOptions options("vo_perf");
   options
-      ("config,c", "/home/halismai/code/bpvo/conf/tsukuba_stereo.cfg", "config file")
+      ("config,c", "D:/Funny-Works/CodeWorks/SLAM/BPVO/bpvo-master/conf/tsukuba_stereo.cfg", "config file")
       ("output,o", "", "prefix to store results for later analysis")
       ("numframes,n", int(1000), "number of frames to process")
       ("dontshow,x", "do not show the image").parse(argc, argv);

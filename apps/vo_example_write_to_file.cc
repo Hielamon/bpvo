@@ -12,10 +12,10 @@
 //
 
 static const char* LEFT_IMAGE_PREFIX =
-"/home/halismai/data/NewTsukubaStereoDataset/illumination/fluorescent/left/tsukuba_fluorescent_L_%05d.png";
+"D:/Academic-Research/Datas/SLAMDatas/NewTsukubaStereoDataset/illumination/fluorescent/left/tsukuba_fluorescent_L_%05d.png";
 
 static const char* DMAP_PREFIX =
-"/home/halismai/data/NewTsukubaStereoDataset/groundtruth/disparity_maps/left/tsukuba_disparity_L_%05d.png";
+"D:/Academic-Research/Datas/SLAMDatas/NewTsukubaStereoDataset/groundtruth/disparity_maps/left/tsukuba_disparity_L_%05d.png";
 
 using namespace bpvo;
 
@@ -69,7 +69,7 @@ bool GetImageAndDisparity(ImageAndDisparity& ret, int f_i)
 int main(int argc, char** argv)
 {
   ProgramOptions options;
-  options("output,o", "", "output prefix file")
+  options("output,o", "trajectory", "output prefix file")
       ("numframes,n", int(500), "number of frames to process").parse(argc, argv);
 
   Matrix33 K; K << 615.0, 0.0, 320.0, 0.0, 615.0, 240.0, 0.0, 0.0, 1.0;
@@ -100,6 +100,7 @@ int main(int argc, char** argv)
 
   auto output_fn = options.get<std::string>("output");
   if(!output_fn.empty()) {
+	  fprintf(stdout, "\nOutput filename : %s", output_fn.c_str());
     trajectory.write(output_fn + ".txt"); // store all the poses as 4x4 matrices
     // write the camera center patch (x,y,z) only wrt to the first added frame
     trajectory.writeCameraPath(output_fn + "_path.txt");

@@ -27,9 +27,19 @@
 #include <cstring>
 #include <cassert>
 
+#if defined(_MSC_VER)
+#define FORCE_INLINE __forceinline
+#elif defined(__GNUC__)
 #define FORCE_INLINE inline __attribute__((always_inline))
+#endif
+
 #define NO_INLINE           __attribute__((noinline))
+
+#if defined(_MSC_VER)
+#define ALIGNED(...)        alignas(__VA_ARGS__)
+#elif defined(__GNUC__)
 #define ALIGNED(...)        __attribute__((aligned(__VA_ARGS__)))
+#endif
 
 #define likely(expr)        __builtin_expect((expr),true)
 #define unlikey(expr)       __builtin_expect((expr),false)
@@ -69,11 +79,11 @@
 #ifndef NDEBUG
 #define DPRINT(...) fprintf(stdout, __VA_ARGS__)
 #ifndef NO_TTY_COLOR
-#define dprintf(args...) do {                     \
+#define dprintf(...) do {                     \
   ANSI_SET(stdout,ANSI_COLOR_BLUE+ANSI_FG);       \
   fprintf(stdout, WHR_STR, WHR_ARG);              \
   ANSI_SET(stdout,0);                             \
-  fprintf(stdout, args);                          \
+  fprintf(stdout, __VA_ARGS__);                          \
 } while(0)
 #else
 #define dprintf(args...) do {                     \
@@ -88,25 +98,25 @@
 
 #ifndef NO_TTY_COLOR
 
-#define Fatal(args...) do {                       \
+#define Fatal(...) do {                       \
   ANSI_SET(stderr, ANSI_COLOR_RED+ANSI_FG);       \
   fprintf(stderr, WHR_STR, WHR_ARG);              \
-  fprintf(stderr, args);                          \
+  fprintf(stderr, __VA_ARGS__);                          \
   ANSI_SET(stderr,0);                             \
   exit(1);                                        \
 } while (0)
 
-#define Warn(args...) do {                        \
+#define Warn(...) do {                        \
   ANSI_SET(stderr, ANSI_COLOR_YELLOW+ANSI_FG);    \
   fprintf(stderr, WHR_STR, WHR_ARG);              \
-  fprintf(stderr, args);                          \
+  fprintf(stderr, __VA_ARGS__);                          \
   ANSI_SET(stderr,0);                             \
 } while (0)
 
-#define Info(args...) do {                        \
+#define Info(...) do {                        \
   ANSI_SET(stdout, ANSI_COLOR_GREEN+ANSI_FG);     \
   fprintf(stdout, WHR_STR, WHR_ARG);              \
-  fprintf(stdout, args);                          \
+  fprintf(stdout, __VA_ARGS__);                          \
   ANSI_SET(stderr,0);                             \
 } while (0)
 

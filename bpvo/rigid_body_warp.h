@@ -29,6 +29,7 @@ namespace bpvo {
 class RigidBodyWarp : public WarpBase<RigidBodyWarp>
 {
  public:
+	 EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef detail::warp_traits<RigidBodyWarp> Traits;
 
   typedef typename Traits::Point              Point;
@@ -42,6 +43,8 @@ class RigidBodyWarp : public WarpBase<RigidBodyWarp>
   typedef typename EigenAlignedContainer<ImagePoint>::type ImagePointVector;
 
  public:
+
+
   RigidBodyWarp(const Matrix33& K, float b);
 
   inline Point makePoint(float x, float y, float d) const

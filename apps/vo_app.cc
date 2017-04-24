@@ -182,7 +182,7 @@ VoApp::Options::Options()
 }
 
 VoApp::VoApp(Options options, std::string conf_fn, UniquePointer<Dataset> dataset)
-    : _impl(make_unique<Impl>(options, conf_fn, std::move(dataset)))
+    : _impl(bpvo::make_unique<Impl>(options, conf_fn, std::move(dataset)))
 {
   Sleep(100); // wait for things to start up
 }

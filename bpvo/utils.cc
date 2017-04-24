@@ -18,14 +18,31 @@
 /*
  * Contributor: halismai@cs.cmu.edu
  */
+#if defined(WIN32) || defined(_WIN32)
+#include <cctype>
+#include <process.h>
+#include <Windows.h>
+#include <DbgHelp.h>
+#include <direct.h>
 
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
+#ifndef S_ISREG
+#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
+#endif
+
+#else
 #include <unistd.h> // have this included first
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <execinfo.h>
+#endif //linux
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <execinfo.h>
 #include <errno.h>
 
 #include <algorithm>
@@ -41,9 +58,35 @@
 
 namespace bpvo {
 
+#if defined(WIN32) || defined(_WIN32)
+	int
+		gettimeofday(struct timeval *tp, void *tzp)
+	{
+		time_t clock;
+		struct tm tm;
+		SYSTEMTIME wtm;
+		GetLocalTime(&wtm);
+		tm.tm_year = wtm.wYear - 1900;
+		tm.tm_mon = wtm.wMonth - 1;
+		tm.tm_mday = wtm.wDay;
+		tm.tm_hour = wtm.wHour;
+		tm.tm_min = wtm.wMinute;
+		tm.tm_sec = wtm.wSecond;
+		tm.tm_isdst = -1;
+		clock = mktime(&tm);
+		tp->tv_sec = clock;
+		tp->tv_usec = wtm.wMilliseconds * 1000;
+		return (0);
+	}
+#endif
+
 bool icompare(const std::string& a, const std::string& b)
 {
-  return a.size() == b.size() ? !strncasecmp(a.c_str(), b.c_str(), a.size()) : false;
+#if defined(WIN32) || defined(_WIN32)
+	return a.size() == b.size() ? !strnicmp(a.c_str(), b.c_str(), a.size()) : false;
+#else
+	return a.size() == b.size() ? !strncasecmp(a.c_str(), b.c_str(), a.size()) : false;
+#endif //linux
 }
 
 struct NoCaseCmp {
@@ -145,7 +188,11 @@ string Format(const char* fmt, ...)
     va_end(va);
 
     if(len < 0 || len >= (int) buf.size()) {
+#ifndef max
       buf.resize(std::max((int)(buf.size() << 1), len + 1));
+#else
+	  buf.resize(max((int)(buf.size() << 1), len + 1));
+#endif
       continue;
     }
 
@@ -155,19 +202,40 @@ string Format(const char* fmt, ...)
 
 string GetBackTrace()
 {
-  void* buf[1024];
+	std::string ret;
+	void* buf[1024];
+
+#if defined(WIN32) || defined(_WIN32)
+  HANDLE process = GetCurrentProcess();
+  SymInitialize(process, NULL, TRUE);
+  WORD n = CaptureStackBackTrace(0, 1024, buf, NULL);
+  SYMBOL_INFO *symbol = (SYMBOL_INFO *)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+  symbol->MaxNameLen = 255;
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  char tempStr[255];
+  
+  for (int i = 0; i < n; i++)
+  {
+	  SymFromAddr(process, (DWORD64)(buf[i]), 0, symbol);
+	  sprintf(tempStr, "%i: %s - 0x%0X\n", n - i - 1, symbol->Name, symbol->Address);
+	  ret += std::string(tempStr);
+  }
+#else
   int n = backtrace(buf, 1024);
   char** strings = backtrace_symbols(buf, n);
-  if(!strings) {
-    perror("backtrace_symbols\n");
-    return "";
+  if (!strings) {
+	  perror("backtrace_symbols\n");
+	  return "";
   }
 
-  std::string ret;
-  for(int i = 0; i < n; ++i)
-    ret += (std::string(strings[i]) + "\n");
+  
+  for (int i = 0; i < n; ++i)
+	  ret += (std::string(strings[i]) + "\n");
 
   free(strings);
+#endif //linux
+  
+  
 
   return ret;
 }
@@ -197,7 +265,7 @@ string timeAsString()
 string errno_string()
 {
   char buf[128];
-  strerror_r(errno, buf, 128);
+  strerror_s(buf, 128, errno);
   return string(buf);
 }
 
@@ -214,14 +282,81 @@ double wallclock()
 
 double cputime()
 {
-  struct rusage ru;
-  if( -1 == getrusage( RUSAGE_SELF, &ru ) ) {
-    Warn("could not cpu usage, error '%s'\n", errno_string().c_str());
-  }
+#if defined(_WIN32)
+	/* Windows -------------------------------------------------- */
+	FILETIME createTime;
+	FILETIME exitTime;
+	FILETIME kernelTime;
+	FILETIME userTime;
+	if (GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &kernelTime, &userTime) != -1)
+	{
+		SYSTEMTIME userSystemTime;
+		if (FileTimeToSystemTime(&userTime, &userSystemTime) == -1) {
+			Warn("could not cpu usage, error '%s'\n", errno_string().c_str());
+		}
+		return (double)userSystemTime.wHour * 3600.0 +
+			(double)userSystemTime.wMinute * 60.0 +
+			(double)userSystemTime.wSecond +
+			(double)userSystemTime.wMilliseconds / 1000.0;
+	}
 
-  return static_cast<double>( ru.ru_utime.tv_sec )
-      + static_cast<double>( ru.ru_utime.tv_usec ) / 1.0E6;
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+	/* AIX, BSD, Cygwin, HP-UX, Linux, OSX, and Solaris --------- */
 
+#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+	/* Prefer high-res POSIX timers, when available. */
+	{
+		clockid_t id;
+		struct timespec ts;
+#if _POSIX_CPUTIME > 0
+		/* Clock ids vary by OS.  Query the id, if possible. */
+		if (clock_getcpuclockid(0, &id) == -1)
+#endif
+#if defined(CLOCK_PROCESS_CPUTIME_ID)
+			/* Use known clock id for AIX, Linux, or Solaris. */
+			id = CLOCK_PROCESS_CPUTIME_ID;
+#elif defined(CLOCK_VIRTUAL)
+			/* Use known clock id for BSD or HP-UX. */
+			id = CLOCK_VIRTUAL;
+#else
+			id = (clockid_t)-1;
+#endif
+		if (id != (clockid_t)-1 && clock_gettime(id, &ts) != -1)
+			return (double)ts.tv_sec +
+			(double)ts.tv_nsec / 1000000000.0;
+	}
+#endif
+
+#if defined(RUSAGE_SELF)
+	{
+		struct rusage rusage;
+		if (getrusage(RUSAGE_SELF, &rusage) == -1) {
+			Warn("could not cpu usage, error '%s'\n", errno_string().c_str());
+		}
+		return (double)rusage.ru_utime.tv_sec + (double)usage.ru_utime.tv_usec / 1000000.0;
+	}
+#endif
+
+#if defined(_SC_CLK_TCK)
+	{
+		const double ticks = (double)sysconf(_SC_CLK_TCK);
+		struct tms tms;
+		if (times(&tms) != (clock_t)-1)
+			return (double)tms.tms_utime / ticks;
+	}
+#endif
+
+#if defined(CLOCKS_PER_SEC)
+	{
+		clock_t cl = clock();
+		if (cl != (clock_t)-1)
+			return (double)cl / (double)CLOCKS_PER_SEC;
+	}
+#endif
+
+#endif
+
+	return -1;
 }
 
 namespace fs {
@@ -273,7 +408,11 @@ bool is_dir(string path)
 
 bool try_make_dir(string dname, int mode = 0777)
 {
-  return (0 == ::mkdir(dname.c_str(), mode));
+#if defined(WIN32) || defined(_WIN32)
+	return (0 == ::_mkdir(dname.c_str()));
+#else
+	return (0 == ::mkdir(dname.c_str(), mode));
+#endif
 }
 
 string mkdir(string dname, bool try_unique, int max_tries)
